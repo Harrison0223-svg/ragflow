@@ -19,6 +19,16 @@ import { chatPromptKbIssues } from './validate-chat-prompt';
 export function useChatSettingSchema() {
   const { t } = useTranslate('chat');
 
+  const AnySearchOptionsSchema = z.object({
+    anysearch_tag: z
+      .string()
+      .trim()
+      .regex(/^$|^[a-z][a-z0-9_-]*\.[a-z][a-z0-9_-]*$/)
+      .optional(),
+    anysearch_params: z.record(z.unknown()).optional(),
+    anysearch_extract: z.boolean().optional(),
+  });
+
   const promptConfigSchema = z.object({
     quote: z.boolean(),
     keyword: z.boolean(),
@@ -36,13 +46,13 @@ export function useChatSettingSchema() {
       )
       .optional(),
     anysearch_api_key: z.string().optional(),
+    // Hidden provider fields must not block saving a different provider.
     anysearch_tag: z
-      .string()
-      .trim()
-      .regex(/^$|^[a-z][a-z0-9_-]*\.[a-z][a-z0-9_-]*$/)
+      .unknown()
+      .transform((value) => (typeof value === 'string' ? value.trim() : value))
       .optional(),
-    anysearch_params: z.record(z.unknown()).optional(),
-    anysearch_extract: z.boolean().optional(),
+    anysearch_params: z.unknown().optional(),
+    anysearch_extract: z.unknown().optional(),
     brave_api_key: z.string().optional(),
     exa_api_key: z.string().optional(),
     firecrawl_api_key: z.string().optional(),
@@ -97,6 +107,17 @@ export function useChatSettingSchema() {
       ...MetadataFilterSchema,
     })
     .superRefine((value, ctx) => {
+      if (
+        value.prompt_config.web_search_provider === WebSearchProvider.AnySearch
+      ) {
+        const options = AnySearchOptionsSchema.safeParse(value.prompt_config);
+        if (!options.success) {
+          for (const issue of options.error.issues) {
+            ctx.addIssue({ ...issue, path: ['prompt_config', ...issue.path] });
+          }
+        }
+      }
+
       for (const issue of chatPromptKbIssues(value, t)) {
         ctx.addIssue({
           code: ZodIssueCode.custom,

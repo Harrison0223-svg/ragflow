@@ -57,7 +57,8 @@ screenshots, source files, or diagnostic output.
   this contract. Discovery is not automatically fetched by chat or the form;
   there is no new public RAGFlow discovery endpoint.
 - The shared HTTP transport caps responses at 4 MiB and uses a 30-second client
-  timeout. Context cancellation propagates. AnySearch request/API errors are
+  timeout. AnySearch's client rejects redirects before authentication can be
+  removed. Context cancellation propagates. AnySearch request/API errors are
   fixed safe messages: raw bodies, provider messages, transport exception text,
   and credentials are never included. No retries or anonymous fallback occur.
 
@@ -123,7 +124,7 @@ Run normal checks in a provisioned checkout:
 bash build.sh --test -run 'AnySearch|WebSearch' ./internal/service/...
 cd web
 npm ci
-npm exec jest -- src/pages/next-chats/chat/web-search-api-key.test.ts --runInBand
+npm exec jest -- src/pages/next-chats/chat/web-search-api-key.test.ts src/pages/next-chats/chat/app-settings/use-chat-setting-schema.test.ts --runInBand
 npm run lint
 npm run type-check
 npm run build

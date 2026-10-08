@@ -209,6 +209,10 @@ func listAnySearchSubDomains(ctx context.Context, client *http.Client, endpoint,
 	}
 	parameters := url.Values{}
 	for _, domain := range domains {
+		domain = strings.TrimSpace(domain)
+		if domain == "" {
+			return nil, errors.New("anysearch: domains must not be blank")
+		}
 		parameters.Add("domain", domain)
 	}
 	response, err := webSearchRequest(ctx, client, http.MethodGet, endpoint+"?"+parameters.Encode(), map[string]string{

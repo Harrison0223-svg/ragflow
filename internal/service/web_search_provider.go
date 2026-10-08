@@ -78,7 +78,13 @@ const (
 )
 
 var (
-	anySearchWebSearchHTTPClient = &http.Client{Timeout: 30 * time.Second}
+	anySearchWebSearchHTTPClient = &http.Client{
+		Timeout: 30 * time.Second,
+		// Reject redirects before the transport can remove authentication.
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	braveWebSearchHTTPClient     = &http.Client{Timeout: 30 * time.Second}
 	exaWebSearchHTTPClient       = &http.Client{Timeout: 30 * time.Second}
 	firecrawlWebSearchHTTPClient = &http.Client{Timeout: 30 * time.Second}

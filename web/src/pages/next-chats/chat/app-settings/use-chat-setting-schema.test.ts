@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { WebSearchProvider } from '@/constants/chat';
 
 // Isolate unrelated assistant settings while exercising the real save schema.
@@ -41,7 +40,27 @@ const AnySearchAssistant = {
 };
 
 describe('AnySearch assistant settings schema', () => {
-  const schema: z.ZodTypeAny = useChatSettingSchema();
+  const schema: import('zod').ZodTypeAny = useChatSettingSchema();
+
+  it.each([
+    { anysearch_tag: 'code' },
+    { anysearch_tag: 123, anysearch_params: '{}', anysearch_extract: 'true' },
+  ])(
+    'allows switching away from AnySearch with invalid hidden options: %j',
+    (options) => {
+      expect(
+        schema.safeParse({
+          ...AnySearchAssistant,
+          prompt_config: {
+            ...AnySearchAssistant.prompt_config,
+            ...options,
+            web_search_provider: WebSearchProvider.Tavily,
+            tavily_api_key: 'tavily-test',
+          },
+        }).success,
+      ).toBe(true);
+    },
+  );
 
   it.each([undefined, '', '  '])(
     'rejects a missing or blank key: %s',

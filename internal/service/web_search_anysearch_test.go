@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -219,7 +220,7 @@ func TestAnySearchSubDomainDiscoveryUsesRepeatedDomains(t *testing.T) {
 		fmt.Fprint(w, `{"code":0,"data":{"domains":[{"domain":"code","sub_domains":[{"sub_domain":"code.doc"}]}]}}`)
 	}))
 	defer server.Close()
-	definitions, err := listAnySearchSubDomains(t.Context(), server.Client(), server.URL, "anysearch-test", []string{"code", "finance"})
+	definitions, err := listAnySearchSubDomains(t.Context(), server.Client(), server.URL, "anysearch-test", []string{" code ", " finance "})
 	if err != nil || !strings.Contains(string(definitions), "code.doc") {
 		t.Fatalf("discovery failed: %v", err)
 	}
@@ -268,6 +269,48 @@ type anySearchFailureTransport struct{}
 
 func (anySearchFailureTransport) RoundTrip(*http.Request) (*http.Response, error) {
 	return nil, errors.New("private-test anysearch-test")
+}
+
+func TestAnySearchRejectsRedirectWithoutFollowUpRequest(t *testing.T) {
+	var redirectedCalls atomic.Int32
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		redirectedCalls.Add(1)
+		fmt.Fprint(w, `{"code":0,"data":{"results":[]}}`)
+	}))
+	defer target.Close()
+	for _, status := range []int{301, 302, 303, 307, 308} {
+		t.Run(fmt.Sprint(status), func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get("Authorization") != "Bearer anysearch-test" {
+					t.Error("initial request lost its key")
+				}
+				// A different hostname ensures this would strip credentials if followed.
+				w.Header().Set("Location", strings.Replace(target.URL, "127.0.0.1", "localhost", 1))
+				w.WriteHeader(status)
+			}))
+			defer server.Close()
+			if _, err := retrieveAnySearchWebSearch(t.Context(), anySearchWebSearchHTTPClient, server.URL, "anysearch-test", "q", anySearchOptions{}); err == nil {
+				t.Fatal("redirect accepted")
+			}
+			if redirectedCalls.Load() != 0 {
+				t.Fatal("redirected request was sent")
+			}
+		})
+	}
+}
+
+func TestAnySearchDiscoveryRejectsBlankDomainsBeforeRequest(t *testing.T) {
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls.Add(1) }))
+	defer server.Close()
+	for _, domains := range [][]string{nil, {}, {""}, {" "}, {"code", " \t"}} {
+		if _, err := listAnySearchSubDomains(t.Context(), server.Client(), server.URL, "anysearch-test", domains); err == nil {
+			t.Fatalf("blank domains accepted: %#v", domains)
+		}
+	}
+	if calls.Load() != 0 {
+		t.Fatal("invalid discovery domains made a request")
+	}
 }
 
 func (transport anySearchTestTransport) RoundTrip(request *http.Request) (*http.Response, error) {
