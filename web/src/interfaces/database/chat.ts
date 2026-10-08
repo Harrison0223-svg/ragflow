@@ -20,6 +20,10 @@ export interface PromptConfig {
   use_kg: boolean;
   reasoning?: boolean;
   cross_languages?: Array<string>;
+  anysearch_api_key?: string;
+  anysearch_tag?: string;
+  anysearch_params?: Record<string, unknown>;
+  anysearch_extract?: boolean;
   brave_api_key?: string;
   exa_api_key?: string;
   firecrawl_api_key?: string;

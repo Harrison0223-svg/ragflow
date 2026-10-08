@@ -2710,7 +2710,11 @@ curl --request POST \
   - `"refine_multiturn"`: `boolean`
   - `"reasoning"`: `boolean`
   - `"cross_languages"`: `list[string]`
-  - `"web_search_provider"`: `string` The web search service to use. Supported values are `"tavily"`, `"querit"`, `"serply"`, and `"youcom"`. If omitted, Tavily is selected only when `"tavily_api_key"` is configured; otherwise web search is disabled.
+  - `"web_search_provider"`: `string` The web search service to use. Supported values are `"anysearch"`, `"brave"`, `"exa"`, `"firecrawl"`, `"linkup"`, `"parallel"`, `"querit"`, `"serply"`, `"tavily"`, and `"youcom"`. If omitted, Tavily is selected only when `"tavily_api_key"` is configured; otherwise web search is disabled.
+  - `"anysearch_api_key"`: `string` Required, non-blank [AnySearch](https://anysearch.com/docs/auth) API key when `web_search_provider` is `"anysearch"`. Anonymous calls are not supported by this integration.
+  - `"anysearch_tag"`: `string` Optional vertical capability tag, e.g. `"code.doc"`. Omit for automatic routing.
+  - `"anysearch_params"`: `object` Optional parameters for the chosen vertical capability.
+  - `"anysearch_extract"`: `boolean` Defaults to `false`. When enabled, extracts content for up to six search results; each extract consumes additional quota. See [AnySearch integration](../anysearch-integration.md).
   - `"tavily_api_key"`: `string`
   - `"querit_api_key"`: `string` The Querit API key. Set `web_search_provider` to `"querit"` when using this field.
   - `"serply_api_key"`: `string` The [Serply](https://serply.io) API key. Set `web_search_provider` to `"serply"` when using this field. See the [Serply documentation](https://serply.io/docs) for details.

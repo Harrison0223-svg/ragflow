@@ -35,6 +35,14 @@ export function useChatSettingSchema() {
         }),
       )
       .optional(),
+    anysearch_api_key: z.string().optional(),
+    anysearch_tag: z
+      .string()
+      .trim()
+      .regex(/^$|^[a-z][a-z0-9_-]*\.[a-z][a-z0-9_-]*$/)
+      .optional(),
+    anysearch_params: z.record(z.unknown()).optional(),
+    anysearch_extract: z.boolean().optional(),
     brave_api_key: z.string().optional(),
     exa_api_key: z.string().optional(),
     firecrawl_api_key: z.string().optional(),
@@ -46,6 +54,7 @@ export function useChatSettingSchema() {
     youcom_api_key: z.string().optional(),
     web_search_provider: z
       .enum([
+        WebSearchProvider.AnySearch,
         WebSearchProvider.Brave,
         WebSearchProvider.Exa,
         WebSearchProvider.Firecrawl,

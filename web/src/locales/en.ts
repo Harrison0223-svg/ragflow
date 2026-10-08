@@ -1262,6 +1262,15 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       // deliberately not translated, so this single template covers all nine.
       webSearchApiKeyLabel: '{{provider}} API Key',
       // One Tip/Message pair per provider, alphabetical by provider id.
+      anysearchApiKeyTip:
+        'Required. Authenticated AnySearch requests use the quota attached to your key.',
+      anysearchApiKeyMessage: 'Please enter your AnySearch API key',
+      anysearchTag: 'AnySearch capability tag',
+      anysearchTagTip:
+        'Optional vertical search tag, such as code.doc. Leave blank for automatic routing. Discover tags at anysearch.com/docs/api-endpoints/v1-sub-domains.',
+      anysearchExtract: 'Extract page content',
+      anysearchExtractTip:
+        'Optional. Makes up to six additional API calls per search, consuming more quota. Search text is kept if extraction fails.',
       braveApiKeyTip:
         'When Brave Search is selected, its web results supplement dataset retrieval. Every Brave endpoint requires a key.',
       braveApiKeyMessage: 'Please enter your Brave Search API Key',

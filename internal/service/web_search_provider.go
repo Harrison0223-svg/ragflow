@@ -30,11 +30,12 @@ import (
 )
 
 // Providers, endpoints and clients are listed alphabetically by provider id
-// (brave, exa, firecrawl, linkup, parallel, querit, serply, tavily, youcom) so
-// a new provider has exactly one obvious place in each list. Tavily's endpoint
+// (anysearch, brave, exa, firecrawl, linkup, parallel, querit, serply, tavily,
+// youcom) so a new provider has exactly one obvious place in each list. Tavily's endpoint
 // lives with its retrieval code in chat_pipeline.go, which is why it has no
 // entry here.
 const (
+	webSearchProviderAnySearch = "anysearch"
 	webSearchProviderBrave     = "brave"
 	webSearchProviderExa       = "exa"
 	webSearchProviderFirecrawl = "firecrawl"
@@ -45,8 +46,9 @@ const (
 	webSearchProviderTavily    = "tavily"
 	webSearchProviderYouCom    = "youcom"
 
-	braveWebSearchEndpoint = "https://api.search.brave.com/res/v1/web/search"
-	exaWebSearchEndpoint   = "https://api.exa.ai/search"
+	anySearchWebSearchEndpoint = "https://api.anysearch.com/v1/search"
+	braveWebSearchEndpoint     = "https://api.search.brave.com/res/v1/web/search"
+	exaWebSearchEndpoint       = "https://api.exa.ai/search"
 	// v2 is Firecrawl's current search shape; the v1 endpoint is deprecated.
 	firecrawlWebSearchEndpoint = "https://api.firecrawl.dev/v2/search"
 	linkupWebSearchEndpoint    = "https://api.linkup.so/v1/search"
@@ -76,6 +78,7 @@ const (
 )
 
 var (
+	anySearchWebSearchHTTPClient = &http.Client{Timeout: 30 * time.Second}
 	braveWebSearchHTTPClient     = &http.Client{Timeout: 30 * time.Second}
 	exaWebSearchHTTPClient       = &http.Client{Timeout: 30 * time.Second}
 	firecrawlWebSearchHTTPClient = &http.Client{Timeout: 30 * time.Second}
@@ -93,8 +96,9 @@ var (
 )
 
 type webSearchProviderConfig struct {
-	Provider string
-	APIKey   string
+	Provider  string
+	APIKey    string
+	AnySearch anySearchOptions
 }
 
 func resolveWebSearchProvider(promptConfig map[string]interface{}) *webSearchProviderConfig {
@@ -121,6 +125,8 @@ func resolveWebSearchProvider(promptConfig map[string]interface{}) *webSearchPro
 	// on every call, so it does not get this carve-out.
 	keyOptional := false
 	switch provider {
+	case webSearchProviderAnySearch:
+		apiKeyField = "anysearch_api_key"
 	case webSearchProviderBrave:
 		apiKeyField = "brave_api_key"
 	case webSearchProviderExa:
@@ -149,9 +155,18 @@ func resolveWebSearchProvider(promptConfig map[string]interface{}) *webSearchPro
 	if apiKey == "" && !keyOptional {
 		return nil
 	}
+	var options anySearchOptions
+	if provider == webSearchProviderAnySearch {
+		var err error
+		options, err = resolveAnySearchOptions(promptConfig)
+		if err != nil {
+			return nil
+		}
+	}
 	return &webSearchProviderConfig{
-		Provider: provider,
-		APIKey:   apiKey,
+		Provider:  provider,
+		APIKey:    apiKey,
+		AnySearch: options,
 	}
 }
 
@@ -190,6 +205,9 @@ func retrieveWebSearchWithTavily(
 		return nil, fmt.Errorf("web search provider is not configured")
 	}
 	switch provider.Provider {
+	case webSearchProviderAnySearch:
+		return retrieveAnySearchWebSearch(ctx, anySearchWebSearchHTTPClient,
+			anySearchWebSearchEndpoint, provider.APIKey, question, provider.AnySearch)
 	case webSearchProviderBrave:
 		return retrieveBraveWebSearch(
 			ctx,

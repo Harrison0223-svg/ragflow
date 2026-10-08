@@ -14,6 +14,9 @@
  *  limitations under the License.
  */
 
+import anysearchLogo from '@/assets/svg/anysearch.svg';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import braveLogo from '@/assets/svg/brave.svg';
 import exaLogo from '@/assets/exa.png';
 import firecrawlLogo from '@/assets/firecrawl.png';
@@ -39,6 +42,11 @@ interface IProps {
 // One entry per provider. `name` is the BRAND, so it stays untranslated; it is what
 // the key field's label is interpolated into (chat.webSearchApiKeyLabel).
 const webSearchProviderCatalog = [
+  {
+    name: 'AnySearch',
+    logo: anysearchLogo,
+    value: WebSearchProvider.AnySearch,
+  },
   {
     name: 'Brave Search',
     logo: braveLogo,
@@ -112,6 +120,12 @@ const providerDisplayName = (provider?: WebSearchProvider) =>
   '';
 
 const providerKeyConfig = {
+  [WebSearchProvider.AnySearch]: {
+    name: 'prompt_config.anysearch_api_key',
+    tip: 'anysearchApiKeyTip',
+    placeholder: 'anysearchApiKeyMessage',
+    helpUrl: 'https://anysearch.com/docs/auth',
+  },
   [WebSearchProvider.Brave]: {
     name: 'prompt_config.brave_api_key',
     tip: 'braveApiKeyTip',
@@ -236,6 +250,35 @@ export function WebSearchFormField({ prefix = '' }: IProps) {
             />
           )}
         </RAGFlowFormItem>
+      )}
+      {selectedProvider === WebSearchProvider.AnySearch && (
+        <>
+          <RAGFlowFormItem
+            name={prefixName(prefix, 'prompt_config.anysearch_tag')}
+            label={t('anysearchTag')}
+            tooltip={t('anysearchTagTip')}
+          >
+            {(field) => (
+              <Input
+                {...field}
+                value={field.value ?? ''}
+                placeholder="code.doc"
+              />
+            )}
+          </RAGFlowFormItem>
+          <RAGFlowFormItem
+            name={prefixName(prefix, 'prompt_config.anysearch_extract')}
+            label={t('anysearchExtract')}
+            tooltip={t('anysearchExtractTip')}
+          >
+            {(field) => (
+              <Switch
+                checked={Boolean(field.value)}
+                onCheckedChange={field.onChange}
+              />
+            )}
+          </RAGFlowFormItem>
+        </>
       )}
     </>
   );

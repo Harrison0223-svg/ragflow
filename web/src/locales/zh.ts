@@ -1152,6 +1152,14 @@ NER：使用 spaCy NER 和基于规则的关键词提取来抽取 Entities 和 R
       // 因此一个模板即可覆盖全部 9 个 provider。
       webSearchApiKeyLabel: '{{provider}} API Key',
       // 每个 provider 一组 Tip/Message，按 provider id 字典序排列。
+      anysearchApiKeyTip: '必填。带认证的 AnySearch 请求使用该密钥关联的额度。',
+      anysearchApiKeyMessage: '请输入你的 AnySearch API Key',
+      anysearchTag: 'AnySearch 垂直检索标签',
+      anysearchTagTip:
+        '可选，例如 code.doc。留空时自动路由；可在 anysearch.com/docs/api-endpoints/v1-sub-domains 查看标签。',
+      anysearchExtract: '提取页面正文',
+      anysearchExtractTip:
+        '可选。每次搜索最多额外调用六次 API，消耗更多额度；提取失败时保留搜索文本。',
       braveApiKeyTip:
         '选择 Brave Search 后，将使用其搜索结果补充知识库检索。Brave 的所有端点都需要 Key。',
       braveApiKeyMessage: '请输入你的 Brave Search API Key',

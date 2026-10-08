@@ -9,6 +9,48 @@ import {
   missingWebSearchApiKeyField,
 } from './web-search-api-key';
 
+describe('AnySearch key requirement', () => {
+  it.each([undefined, '', '   '])('rejects missing or blank key: %s', (key) => {
+    const config = {
+      web_search_provider: WebSearchProvider.AnySearch,
+      anysearch_api_key: key,
+      tavily_api_key: 'other-test',
+    } as PromptConfig;
+    expect(isWebSearchApiKeyRequired(WebSearchProvider.AnySearch)).toBe(true);
+    expect(getWebSearchApiKeyField(WebSearchProvider.AnySearch)).toBe(
+      'anysearch_api_key',
+    );
+    expect(hasWebSearchProvider(config)).toBe(false);
+    expect(missingWebSearchApiKeyField(config)).toBe('anysearch_api_key');
+  });
+
+  it('uses only the trimmed AnySearch key', () => {
+    const config = {
+      web_search_provider: WebSearchProvider.AnySearch,
+      anysearch_api_key: ' anysearch-test ',
+      tavily_api_key: 'other-test',
+    } as PromptConfig;
+    expect(getWebSearchProvider(config)).toBe(WebSearchProvider.AnySearch);
+    expect(getWebSearchApiKey(config)).toBe('anysearch-test');
+    expect(hasWebSearchProvider(config)).toBe(true);
+    expect(missingWebSearchApiKeyField(config)).toBeUndefined();
+  });
+
+  it('does not select AnySearch implicitly or lend its key to another provider', () => {
+    expect(
+      hasWebSearchProvider({
+        anysearch_api_key: 'anysearch-test',
+      } as PromptConfig),
+    ).toBe(false);
+    expect(
+      hasWebSearchProvider({
+        web_search_provider: WebSearchProvider.Querit,
+        anysearch_api_key: 'anysearch-test',
+      } as PromptConfig),
+    ).toBe(false);
+  });
+});
+
 describe('getWebSearchProvider', () => {
   it('does not select a provider for a new unconfigured dialog', () => {
     expect(getWebSearchProvider({} as PromptConfig)).toBeUndefined();
